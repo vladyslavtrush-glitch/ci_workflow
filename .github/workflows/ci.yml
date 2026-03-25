@@ -33,11 +33,11 @@ jobs:
 
       - name: Check SQL files
         run: |
-          test -f database/create_db.sql
-          test -f database/create_tasks.sql
-          test -f database/create_task_logs.sql
-          test -f database/seed_tasks.sql
-          test -f database/seed_task_logs.sql
+          test -f database/create_db
+          test -f database/create_tasks
+          test -f database/create_task_logs
+          test -f database/seed_tasks
+          test -f database/seed_task_logs
 
       - name: Run create_db.sql
         run: |
