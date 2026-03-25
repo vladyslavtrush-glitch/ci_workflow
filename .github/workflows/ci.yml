@@ -1,0 +1,74 @@
+name: Simple CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-database:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
+      - name: Check SQL files
+        run: |
+          test -f database/create_db.sql
+          test -f database/create_tasks.sql
+          test -f database/create_task_logs.sql
+          test -f database/seed_tasks.sql
+          test -f database/seed_task_logs.sql
+
+      - name: Run create_db.sql
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot < database/create_db.sql
+
+      - name: Run create_tasks.sql
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot < database/create_tasks.sql
+
+      - name: Run create_task_logs.sql
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot < database/create_task_logs.sql
+
+      - name: Run seeds
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot < database/seed_tasks.sql
+          mysql -h 127.0.0.1 -uroot -proot < database/seed_task_logs.sql
+
+      - name: Check database
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot -e "SHOW DATABASES LIKE 'db_ci';"
+
+      - name: Check tables
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot -D db_ci -e "SHOW TABLES LIKE 'tasks';"
+          mysql -h 127.0.0.1 -uroot -proot -D db_ci -e "SHOW TABLES LIKE 'task_logs';"
+
+      - name: Check tasks data
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot -D db_ci -e "SELECT * FROM tasks;"
+
+      - name: Check logs data
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot -D db_ci -e "SELECT * FROM task_logs;"
