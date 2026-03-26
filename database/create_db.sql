@@ -1,0 +1,2 @@
+CREATE DATABASE IF NOT EXISTS create_db;
+USE create_db;
